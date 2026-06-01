@@ -10,10 +10,10 @@ const router = express.Router();
 router.post("/addPost", verify, postController.addPost);
 
 // GET ALL POSTS
-router.get("/getAllPosts", verify, postController.getAllPosts);
+router.get("/getAllPosts", postController.getAllPosts);
 
 // GET SINGLE POST
-router.get("/getSpecificPost/:id", verify, postController.getSpecificPost);
+router.get("/getSpecificPost/:id", postController.getSpecificPost);
 
 // UPDATE POST
 router.patch("/updatePost/:id", verify, postController.updatePost);
