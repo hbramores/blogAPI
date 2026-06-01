@@ -2,6 +2,18 @@ const Post = require("../models/Post");
 const User = require("../models/User");
 const { errorHandler } = require("../auth");
 
+const formatCommentsResponse = async (comments) => {
+    const plainComments = comments.map(comment => comment.toObject ? comment.toObject() : comment);
+    const userIds = [...new Set(plainComments.map(comment => comment.userId).filter(Boolean))];
+    const users = await User.find({ _id: { $in: userIds } }, "username");
+    const userMap = new Map(users.map(user => [user._id.toString(), user.username]));
+
+    return plainComments.map(comment => ({
+        ...comment,
+        author: userMap.get(comment.userId) || comment.userId
+    }));
+};
+
 const formatPostResponse = async (post) => {
     const plainPost = post.toObject ? post.toObject() : post;
     const author = await User.findById(plainPost.author, "username");
@@ -9,7 +21,8 @@ const formatPostResponse = async (post) => {
     return {
         ...plainPost,
         authorId: plainPost.author,
-        author: author ? author.username : plainPost.author
+        author: author ? author.username : plainPost.author,
+        comments: await formatCommentsResponse(plainPost.comments || [])
     };
 };
 
@@ -157,7 +170,7 @@ module.exports.addPostComment = async (req, res) => {
 
         return res.status(200).send({
             message: "Comment added successfully",
-            comments: post.comments
+            comments: await formatCommentsResponse(post.comments)
         });
 
     } catch (error) {
@@ -173,7 +186,10 @@ module.exports.getPostComments = async (req, res) => {
             return res.status(404).send({ message: "Post not found" });
         }
 
-        return res.status(200).send(post);
+        return res.status(200).send({
+            title: post.title,
+            comments: await formatCommentsResponse(post.comments)
+        });
 
     } catch (error) {
         return errorHandler(error, req, res);
