@@ -9,6 +9,10 @@ const blogSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Content is Required']
     },
+    imageUrl: {
+        type: String,
+        default: ''
+    },
     author: {
         type: String,
         required: [true, 'Author is Required']
